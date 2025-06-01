@@ -1,0 +1,42 @@
+<configuration>
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/app-log.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/app-log.%d{yyyy-MM-dd}.json</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <logger name="com.example.cafe.controller.AdminController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.AuthController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.CustomerController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.ManagerController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.PageController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.UserController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <logger name="com.example.cafe.controller.ViewAuthController" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_FILE"/>
+    </root>
+</configuration>

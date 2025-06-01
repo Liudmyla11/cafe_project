@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Інформація про користувача</title>
+  <style>
+    :root {
+      --primary-color: #0077cc;
+      --danger-color: #f44336;
+      --background-color: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      padding: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+    }
+
+    .info-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      word-wrap: break-word;
+      text-align: left;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #666;
+    }
+
+    .value {
+      color: #111;
+    }
+
+    button {
+      background-color: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Інформація про ваш сеанс</h1>
+
+  <div class="info-box">
+    <div><span class="label">Токен JWT:</span></div>
+    <div class="value" id="tokenBox">Завантаження...</div>
+  </div>
+
+  <div class="info-box">
+    <div><span class="label">Інформація про користувача:</span></div>
+    <div class="value" id="userBox">Завантаження...</div>
+  </div>
+
+  <button onclick="logout()">Вийти</button>
+</div>
+
+<script>
+  const token = localStorage.getItem('jwt');
+
+  if (!token) {
+    alert("Токен не знайдено. Будь ласка, спочатку увійдіть.");
+    window.location.href = "/auth/login";
+  } else {
+    document.getElementById('tokenBox').textContent = token;
+
+    fetch('/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      credentials: 'include'
+    })
+            .then(response => {
+              if (!response.ok) throw new Error('Помилка авторизації або запиту');
+              return response.json();
+            })
+            .then(data => {
+              document.getElementById('userBox').textContent =
+                      `Ім'я користувача: ${data.username}, Роль: ${data.roles.join(', ')}, ID сесії: ${data.sessionId}`;
+            })
+            .catch(err => {
+              document.getElementById('userBox').textContent = 'Не вдалося завантажити інформацію про користувача: ' + err.message;
+              logout();
+            });
+  }
+
+  function logout() {
+    localStorage.removeItem('jwt');
+    window.location.href = "/auth/login";
+  }
+</script>
+</body>
+</html>

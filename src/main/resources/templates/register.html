@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Реєстрація</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #ffffff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      color: #333333;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin: 12px 0 6px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4b9e5a;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .login-link {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    async function registerUser(event) {
+      event.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+
+      const response = await fetch('/auth/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role })
+      });
+
+      if (response.ok) {
+        alert("Реєстрація успішна! Тепер ви можете увійти.");
+        window.location.href = "/auth/login";
+      } else {
+        const errorText = await response.text();
+        alert("Реєстрація не вдалася: " + errorText);
+      }
+    }
+  </script>
+</head>
+<body>
+<div class="container">
+  <h1>Реєстрація</h1>
+  <form onsubmit="registerUser(event)">
+    <label for="username">Ім'я користувача:</label>
+    <input type="text" id="username" name="username" required />
+
+    <label for="password">Пароль:</label>
+    <input type="password" id="password" name="password" required />
+
+    <label for="role">Роль (необов'язково):</label>
+    <select id="role" name="role">
+      <option value="">Виберіть роль</option>
+      <option value="ROLE_CUSTOMER">Користувач</option>
+      <option value="ROLE_ADMIN">Адмін</option>
+      <option value="ROLE_MANAGER">Менеджер</option>
+    </select>
+
+    <button type="submit">Зареєструватися</button>
+  </form>
+
+  <div class="login-link">
+    <p>Вже маєте обліковий запис? <a href="/auth/login">Увійти тут</a></p>
+  </div>
+</div>
+</body>
+</html>

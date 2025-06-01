@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Вхід</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 24px;
+            color: #333333;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin: 12px 0 6px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .register-link {
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function parseJwt(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+        async function loginUser(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/auth/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                localStorage.setItem('jwt', data.token);
+
+                alert("Вхід успішний!");
+
+                const payload = parseJwt(data.token);
+                const roles = payload.roles || payload.authorities || [];
+
+                if (roles.includes("ROLE_ADMIN")) {
+                    window.location.href = "/admin/dashboard";
+                } else if (roles.includes("ROLE_MANAGER")) {
+                    window.location.href = "/manager/dashboard";
+                } else if (roles.includes("ROLE_CUSTOMER")) {
+                    window.location.href = "/customer/dashboard";
+                } else {
+                    window.location.href = "/me";
+                }
+            } else {
+                alert("Помилка входу: недійсне ім'я користувача або пароль");
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Вхід</h1>
+    <form onsubmit="loginUser(event)">
+        <label for="username">Ім'я користувача:</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required />
+
+        <button type="submit">Ввійти</button>
+    </form>
+
+    <div class="register-link">
+        <p>Немає облікового запису? <a href="/auth/register">Зареєструйтесь тут</a></p>
+    </div>
+</div>
+</body>
+</html>

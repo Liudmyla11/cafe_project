@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="uk" >
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --primary: #2f80ed;
+            --light: #f4f7fa;
+            --white: #ffffff;
+            --gray: #6c757d;
+            --border: #dee2e6;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        #user-info {
+            text-align: right;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: var(--gray);
+        }
+
+        .tabs {
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            margin-right: 5px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f3f4f6;
+            border-radius: 6px 6px 0 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .tab-button:hover {
+            background-color: #e2e8f0;
+        }
+
+        .tab-button.active {
+            background-color: white;
+            color: #2f80ed;
+            border-bottom: 2px solid #2f80ed;
+            box-shadow: inset 0 -2px 0 0 #2f80ed;
+            z-index: 1;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+        }
+
+        table caption {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+            background-color: #2f80ed;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            border-radius: 6px 6px 0 0;
+        }
+
+        th, td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #e1e4e8;
+            vertical-align: middle;
+            font-size: 0.95em;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 1em;
+            background-color: #f6f8fa;
+            color: #333;
+            font-weight: bold;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        td:nth-child(1) {
+            text-align: center;
+            width: 60px;
+            font-weight: bold;
+        }
+
+        td:nth-child(2) {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        td:nth-child(3) {
+            text-align: left;
+            font-family: "Courier New", Courier, monospace;
+            color: #444;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9fbfc;
+        }
+
+        tbody tr:hover {
+            background-color: #eaf2ff;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        thead {
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            padding: 10px 18px;
+            font-weight: bold;
+            border: none;
+            background-color: #2f80ed;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1a64d6;
+        }
+
+        #create-user-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        #create-user-form button {
+            padding: 8px 14px;
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .edit-form label {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .edit-form input,
+        .edit-form select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .edit-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .edit-buttons button {
+            padding: 8px 14px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<div id="user-info">
+    Адмін: <span id="user-name">...</span> | Сесія: <span id="session-id">...</span>
+</div>
+
+<h1>Панель адміністратора</h1>
+
+<nav class="tabs">
+    <button class="tab-button active" id="tab-users">Користувачі</button>
+    <button class="tab-button" id="tab-cafes">Кав’ярні</button>
+    <button class="tab-button" id="tab-menu">Меню</button>
+    <button class="tab-button" id="tab-orders">Замовлення</button>
+</nav>
+
+<div id="content">
+    <div id="users-section" style="display:none;">
+        <button id="btn-create-user">Створити користувача</button>
+        <div id="create-user-form" style="display:none; margin-top: 10px;">
+            <input type="text" id="new-username" placeholder="Username" required>
+            <input type="password" id="new-password" placeholder="Password" required>
+            <select id="new-role" required>
+                <option value="" disabled selected>Оберіть роль</option>
+                <option value="ROLE_ADMIN">ADMIN</option>
+                <option value="ROLE_MANAGER">MANAGER</option>
+                <option value="ROLE_CUSTOMER">CUSTOMER</option>
+            </select>
+            <button id="submit-new-user">Створити</button>
+            <button id="cancel-new-user">Відмінити</button>
+        </div>
+
+        <table id="users-table">
+            <caption>Користувачі</caption>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Roles</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="cafes-section" style="display:none;">
+        <button id="btn-create-cafe">Створити кафе</button>
+        <div id="create-cafe-form" style="display:none; margin-top: 10px;">
+            <input type="text" id="new-cafe-name" placeholder="Назва кав`ярні" required>
+            <input type="text" id="new-cafe-address" placeholder="Адреса">
+            <input type="text" id="new-cafe-city" placeholder="Місто">
+            <select id="new-cafe-manager" required>
+                <option value="" disabled selected>Оберіть менеджера</option>
+            </select>
+            <button id="submit-new-cafe">Створити</button>
+            <button id="cancel-new-cafe">Відмінити</button>
+        </div>
+
+        <table id="cafes-table" style="margin-top: 10px;">
+            <caption>Кав’ярні</caption>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Назва</th>
+                <th>Адреса</th>
+                <th>Місто</th>
+                <th>Менеджер</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="menu-section" style="display: none;">
+        <h2>Меню</h2>
+        <button id="btn-create-menu-item" style="margin-bottom: 10px;">Створити позицію меню</button>
+        <br>
+
+        <div id="create-menu-item-form" style="display:none; margin-top: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 6px; max-width: 400px;">
+            <h3>Створити позицію меню</h3>
+            <label>
+                Назва:
+                <input type="text" id="new-menu-item-name" required>
+            </label><br><br>
+            <label>
+                Категорія:
+                <input type="text" id="new-menu-item-category" required>
+            </label><br><br>
+            <label>
+                Ціна:
+                <input type="number" id="new-menu-item-price" min="0" step="0.01" required>
+            </label><br><br>
+            <label>
+                Кав'ярня:
+                <select id="new-menu-item-cafe" required>
+                    <option value="" disabled selected>Оберіть кав'ярню</option>
+                </select>
+            </label><br><br>
+            <button id="submit-new-menu-item">Створити</button>
+            <button id="cancel-new-menu-item">Відмінити</button>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label for="menu-cafe-select">Оберіть кав'ярню, щоб переглянути меню:</label>
+            <select id="menu-cafe-select">
+                <option value="" disabled selected>-- Оберіть кав'ярню --</option>
+            </select>
+        </div>
+
+        <table id="menu-items-table" style="margin-top: 10px;">
+            <caption>Меню</caption>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Назва</th>
+                <th>Категорія</th>
+                <th>Ціна</th>
+            </tr>
+            </thead>
+            <tbody id="menu-items-table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="orders-section" style="display:none;">
+        <table id="orders-table">
+            <caption>Замовлення</caption>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Користувач</th>
+                <th>Кав’ярня</th>
+                <th>Позиції</th>
+                <th>Загальна сума</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<button onclick="logout()">Вийти</button>
+
+<script>
+    async function secureFetch(url) {
+        const res = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (res.status === 401) {
+            alert("Будь ласка, увійдіть в систему.");
+            window.location.href = "/auth/login";
+            return null;
+        }
+        return res;
+    }
+
+    const tabs = document.querySelectorAll('.tab-button');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            showSection(tab.id.replace('tab-', '') + '-section');
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        showSection('users-section');
+        showTable('users-table');
+    });
+
+    async function loadUsers() {
+        try {
+            const res = await secureFetch('/admin/users');
+            if (!res) return;
+            const users = await res.json();
+            const tbody = document.querySelector('#users-table tbody');
+            tbody.innerHTML = users.map(u =>
+                `<tr data-user-id="${u.id}">
+                <td>${u.id}</td>
+                <td>${u.username}</td>
+                <td>${u.roles ? u.roles.join(', ') : ''}</td>
+                <td>
+                    <button class="edit-user-btn" style="margin-right: 10px;">Редагувати</button>
+                    <button class="delete-user-btn">Видалити</button>
+                </td>
+            </tr>
+            <tr class="edit-row" style="display:none;">
+                <td colspan="4">
+                    <div class="edit-form">
+                        <label>Username: <input type="text" class="edit-username"></label><br>
+                        <label>Password (залишити порожнім, якщо не змінювати): <input type="password" class="edit-password"></label><br>
+                        <label>Оберіть роль:
+                            <select class="edit-role">
+                                <option value="">-- Виберіть роль --</option>
+                                <option value="ROLE_ADMIN">ADMIN</option>
+                                <option value="ROLE_MANAGER">MANAGER</option>
+                                <option value="ROLE_CUSTOMER">CUSTOMER</option>
+                            </select>
+                        </label><br>
+                            <div class="edit-buttons">
+                                <button class="save-edit-btn">Зберегти</button>
+                                <button class="cancel-edit-btn">Відмінити</button>
+                            </div>
+                    </div>
+                </td>
+            </tr>`
+            ).join('');
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    document.querySelector('#users-table tbody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-user-btn')) {
+            const tr = e.target.closest('tr');
+            const nextTr = tr.nextElementSibling;
+            const userId = tr.getAttribute('data-user-id');
+            const username = tr.children[1].textContent;
+            const roles = tr.children[2].textContent.split(', ').filter(r => r);
+
+            document.querySelectorAll('.edit-row').forEach(row => row.style.display = 'none');
+
+            nextTr.querySelector('.edit-username').value = username;
+            nextTr.querySelector('.edit-password').value = '';
+            nextTr.querySelector('.edit-role').value = roles.length > 0 ? roles[0] : '';
+
+            nextTr.style.display = '';
+
+            nextTr.setAttribute('data-user-id', userId);
+        }
+    });
+
+    document.querySelector('#users-table tbody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('cancel-edit-btn')) {
+            const editRow = e.target.closest('tr.edit-row');
+            if (editRow) {
+                editRow.style.display = 'none';
+            }
+        }
+    });
+
+    document.querySelector('#users-table tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('save-edit-btn')) {
+            const editRow = e.target.closest('tr.edit-row');
+            if (!editRow) return;
+
+            const userId = editRow.getAttribute('data-user-id');
+            const username = editRow.querySelector('.edit-username').value.trim();
+            const password = editRow.querySelector('.edit-password').value;
+            const role = editRow.querySelector('.edit-role').value;
+
+            if (!username || !role) {
+                alert('Будь ласка, заповніть поля Username і роль.');
+                return;
+            }
+
+            const updatedUser = {
+                username: username,
+                roles: [role],
+                enabled: true
+            };
+
+            if (password.length > 0) {
+                updatedUser.password = password;
+            }
+
+            try {
+                const res = await fetch(`/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify(updatedUser)
+                });
+
+                if (!res.ok) {
+                    if (res.status === 409) {
+                        alert('Користувач з таким ім\'ям вже існує');
+                    } else {
+                        const errText = await res.text();
+                        alert('Помилка при оновленні: ' + errText);
+                    }
+                    return;
+                }
+
+                alert('Користувача оновлено успішно!');
+                editRow.style.display = 'none';
+                loadUsers();
+            } catch (e) {
+                alert('Помилка: ' + e.message);
+            }
+        }
+    });
+
+    async function loadCafes() {
+        try {
+            const res = await secureFetch('/admin/cafes');
+            if (!res) return;
+            const cafes = await res.json();
+            const tbody = document.querySelector('#cafes-table tbody');
+            tbody.innerHTML = cafes.map(c =>
+                `<tr data-cafe-id="${c.id}">
+                <td>${c.id}</td>
+                <td>${c.name}</td>
+                <td>${c.address || '-'}</td>
+                <td>${c.city || '-'}</td>
+                <td>${c.manager ? c.manager.username : '-'}</td>
+                <td>
+                    <button class="edit-cafe-btn" style="margin-right: 10px;">Редагувати</button>
+                    <button class="delete-cafe-btn">Видалити</button>
+                </td>
+            </tr>
+            <tr class="edit-cafe-row" style="display:none;">
+                <td colspan="6">
+                    <div class="edit-cafe-form">
+                        <label>Назва: <input type="text" class="edit-cafe-name"></label><br>
+                        <label>Адреса: <input type="text" class="edit-cafe-address"></label><br>
+                        <label>Місто: <input type="text" class="edit-cafe-city"></label><br>
+                        <label>Менеджер:
+                            <select class="edit-cafe-manager">
+                                <option value="" disabled>Завантаження менеджерів...</option>
+                            </select>
+                        </label><br>
+                        <div class="edit-buttons">
+                            <button class="save-cafe-btn">Зберегти</button>
+                            <button class="cancel-cafe-btn">Відмінити</button>
+                        </div>
+                    </div>
+                </td>
+            </tr>`
+            ).join('');
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+    async function loadCafesForMenuForm() {
+        try {
+            const res = await fetch('/admin/cafes', {
+                credentials: 'include'
+            });
+
+            if (!res.ok) {
+                throw new Error('Не вдалося завантажити кав`ярні');
+            }
+
+            const cafes = await res.json();
+            const select = document.getElementById('new-menu-item-cafe');
+
+            select.innerHTML = '<option value="" disabled selected>Оберіть кав\'ярню</option>';
+
+            cafes.forEach(cafe => {
+                const option = document.createElement('option');
+                option.value = cafe.id;
+                option.textContent = cafe.name + (cafe.city ? ` (${cafe.city})` : '');
+                select.appendChild(option);
+            });
+
+        } catch (e) {
+            alert('Помилка при завантаженні кав`ярень: ' + e.message);
+        }
+    }
+
+    document.getElementById('btn-create-cafe').addEventListener('click', () => {
+        loadManagersForCafeForm();
+        document.getElementById('create-cafe-form').style.display = 'block';
+    });
+
+    document.getElementById('btn-create-menu-item').addEventListener('click', async () => {
+        await loadCafesForMenuForm();
+        document.getElementById('create-menu-item-form').style.display = 'block';
+    });
+
+    document.getElementById('cancel-new-cafe').addEventListener('click', () => {
+        document.getElementById('create-cafe-form').style.display = 'none';
+    });
+
+    document.getElementById('cancel-new-menu-item').addEventListener('click', () => {
+        document.getElementById('create-menu-item-form').style.display = 'none';
+    });
+
+    async function loadManagersForCafeForm() {
+        try {
+            const res = await secureFetch('/admin/users');
+            if (!res) return;
+            const users = await res.json();
+
+            const managerSelect = document.getElementById('new-cafe-manager');
+            managerSelect.innerHTML = '<option value="" disabled selected>Оберіть менеджера</option>';
+
+            users
+                .filter(u => u.roles.includes('ROLE_MANAGER'))
+                .forEach(manager => {
+                    const option = document.createElement('option');
+                    option.value = manager.id;
+                    option.textContent = manager.username;
+                    managerSelect.appendChild(option);
+                });
+        } catch (e) {
+            alert('Помилка при завантаженні менеджерів: ' + e.message);
+        }
+    }
+
+    async function loadManagersForEditCafeForm(editFormElement) {
+        try {
+            const res = await secureFetch('/admin/users');
+            if (!res) return;
+            const users = await res.json();
+
+            const managerSelect = editFormElement.querySelector('.edit-cafe-manager');
+            managerSelect.innerHTML = '<option value="" disabled>Оберіть менеджера</option>';
+
+            users
+                .filter(u => u.roles.includes('ROLE_MANAGER'))
+                .forEach(manager => {
+                    const option = document.createElement('option');
+                    option.value = manager.id;
+                    option.textContent = manager.username;
+                    managerSelect.appendChild(option);
+                });
+        } catch (e) {
+            alert('Помилка при завантаженні менеджерів: ' + e.message);
+        }
+    }
+
+    document.querySelector('#cafes-table tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('edit-cafe-btn')) {
+            const row = e.target.closest('tr');
+            const editRow = row.nextElementSibling;
+
+            await loadManagersForEditCafeForm(editRow);
+
+            editRow.querySelector('.edit-cafe-name').value = row.children[1].textContent;
+            editRow.querySelector('.edit-cafe-address').value = row.children[2].textContent === '-' ? '' : row.children[2].textContent;
+            editRow.querySelector('.edit-cafe-city').value = row.children[3].textContent === '-' ? '' : row.children[3].textContent;
+
+            const managerUsername = row.children[4].textContent;
+            const managerSelect = editRow.querySelector('.edit-cafe-manager');
+
+            for (const option of managerSelect.options) {
+                if (option.textContent === managerUsername) {
+                    option.selected = true;
+                    break;
+                }
+            }
+
+            editRow.style.display = '';
+        }
+    });
+
+    document.getElementById('submit-new-cafe').addEventListener('click', async () => {
+        const name = document.getElementById('new-cafe-name').value.trim();
+        const address = document.getElementById('new-cafe-address').value.trim();
+        const city = document.getElementById('new-cafe-city').value.trim();
+        const managerId = document.getElementById('new-cafe-manager').value;
+
+        if (!name) {
+            alert('Будь ласка, введіть назву кав’ярні.');
+            return;
+        }
+
+        if (!managerId) {
+            alert('Будь ласка, оберіть менеджера.');
+            return;
+        }
+
+        const newCafe = {
+            name,
+            address,
+            city,
+            manager: { id: parseInt(managerId) }
+        };
+
+        try {
+            const res = await fetch('/admin/cafes', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify(newCafe)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                alert('Помилка: ' + errText);
+                return;
+            }
+
+            alert('Кав`ярню створено успішно!');
+            document.getElementById('create-cafe-form').style.display = 'none';
+            loadCafes();
+            loadMenuCafes();
+        } catch (e) {
+            alert('Помилка: ' + e.message);
+        }
+    });
+
+    document.getElementById('submit-new-menu-item').addEventListener('click', async () => {
+        const name = document.getElementById('new-menu-item-name').value.trim();
+        const category = document.getElementById('new-menu-item-category').value.trim();
+        const price = parseFloat(document.getElementById('new-menu-item-price').value);
+        const cafeId = document.getElementById('new-menu-item-cafe').value;
+
+        if (!name || !category || isNaN(price) || price <= 0) {
+            alert('Будь ласка, заповніть усі поля та переконайтеся, що ціна правильна.');
+            return;
+        }
+
+        if (!cafeId) {
+            alert("Будь ласка, оберіть кав'ярню.");
+            return;
+        }
+
+        const newMenuItem = {
+            name,
+            category,
+            price,
+            cafe: { id: parseInt(cafeId) }
+        };
+
+        try {
+            const res = await fetch('/admin/menu-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(newMenuItem)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                alert('Помилка: ' + errText);
+                return;
+            }
+
+            alert('Позицію меню створено успішно!');
+            document.getElementById('create-menu-item-form').style.display = 'none';
+
+            document.getElementById('new-menu-item-name').value = '';
+            document.getElementById('new-menu-item-category').value = '';
+            document.getElementById('new-menu-item-price').value = '';
+            document.getElementById('new-menu-item-cafe').value = '';
+
+            const select = document.getElementById('menu-cafe-select');
+            const placeholderOption = select.querySelector('option[value=""]');
+            placeholderOption.disabled = false;
+            select.value = '';
+            placeholderOption.disabled = true;
+
+            const tableBody = document.getElementById('menu-items-table-body');
+            tableBody.innerHTML = '';
+        } catch (e) {
+            alert('Помилка: ' + e.message);
+        }
+    });
+
+    async function loadMenuCafes() {
+        try {
+            const res = await secureFetch('/cafes');
+            if (!res.ok) throw new Error('Не вдалося завантажити кав`ярні');
+            const cafes = await res.json();
+            const select = document.getElementById('menu-cafe-select');
+            select.innerHTML = '<option value="" disabled selected>-- Оберіть кав`ярню --</option>';
+            cafes.forEach(cafe => {
+                const option = document.createElement('option');
+                option.value = cafe.id;
+                option.textContent = cafe.name;
+                select.appendChild(option);
+            });
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    document.getElementById('menu-cafe-select').addEventListener('change', async function () {
+        const cafeId = this.value;
+        if (!cafeId) return;
+
+        try {
+            const res = await secureFetch(`/admin/cafes/${cafeId}/menu`);
+            if (!res.ok) throw new Error('Не вдалося завантажити меню');
+            const items = await res.json();
+
+            console.log('Menu items:', items);
+
+            const tbody = document.querySelector('#menu-items-table tbody');
+            if (!tbody) {
+                console.error('tbody not found');
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.price} $</td>
+            </tr>
+        `).join('');
+
+            document.getElementById('menu-items-table').style.display = 'table';
+
+        } catch (e) {
+            alert(e.message);
+        }
+    });
+
+    async function loadOrders() {
+        try {
+            const res = await secureFetch('/admin/orders');
+            if (!res) return;
+            const orders = await res.json();
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = orders.map(o =>
+                `<tr>
+                    <td>${o.id}</td>
+                    <td>${o.user ? o.user.username : '-'}</td>
+                    <td>${o.cafe ? o.cafe.name : '-'}</td>
+                    <td>${o.itemNames?.join(', ') ?? '-'}</td>
+                    <td>${o.totalAmount.toFixed(2)} $</td>
+                </tr>`).join('');
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    document.querySelector('#cafes-table tbody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-cafe-btn')) {
+            const tr = e.target.closest('tr');
+            const nextTr = tr.nextElementSibling;
+            const cafeId = tr.getAttribute('data-cafe-id');
+            const name = tr.children[1].textContent;
+            const address = tr.children[2].textContent === '-' ? '' : tr.children[2].textContent;
+            const city = tr.children[3].textContent === '-' ? '' : tr.children[3].textContent;
+
+            document.querySelectorAll('.edit-cafe-row').forEach(row => row.style.display = 'none');
+
+            nextTr.querySelector('.edit-cafe-name').value = name;
+            nextTr.querySelector('.edit-cafe-address').value = address;
+            nextTr.querySelector('.edit-cafe-city').value = city;
+            nextTr.setAttribute('data-cafe-id', cafeId);
+            nextTr.style.display = '';
+        }
+    });
+
+    document.querySelector('#cafes-table tbody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('cancel-cafe-btn')) {
+            const editRow = e.target.closest('tr.edit-cafe-row');
+            if (editRow) {
+                editRow.style.display = 'none';
+            }
+        }
+    });
+
+    document.querySelector('#cafes-table tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('save-cafe-btn')) {
+            const editRow = e.target.closest('tr.edit-cafe-row');
+            if (!editRow) return;
+
+            const cafeId = editRow.getAttribute('data-cafe-id');
+            const name = editRow.querySelector('.edit-cafe-name').value.trim();
+            const address = editRow.querySelector('.edit-cafe-address').value.trim();
+            const city = editRow.querySelector('.edit-cafe-city').value.trim();
+            const managerId = editRow.querySelector('.edit-cafe-manager').value;
+
+            if (!name) {
+                alert('Назва кав`ярні обов’язкова.');
+                return;
+            }
+
+            const updatedCafe = {
+                name,
+                address,
+                city,
+                manager: { id: parseInt(managerId) }
+            };
+
+            try {
+                const res = await fetch(`/admin/cafes/${cafeId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(updatedCafe)
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    alert('Помилка при оновленні: ' + errText);
+                    return;
+                }
+
+                alert('Кав`ярню оновлено успішно!');
+                editRow.style.display = 'none';
+                loadCafes();
+            } catch (e) {
+                alert('Помилка: ' + e.message);
+            }
+        }
+    });
+
+    function showTable(tableId) {
+        document.querySelectorAll('#content table').forEach(table => {
+            table.style.display = table.id === tableId ? '' : 'none';
+        });
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.toggle('active', btn.id === `tab-${tableId.split('-')[0]}`);
+        });
+
+        const btnCreateUser = document.getElementById('btn-create-user');
+        if (tableId === 'users-table') {
+            btnCreateUser.style.display = 'inline-block';
+        } else {
+            btnCreateUser.style.display = 'none';
+            document.getElementById('create-user-form').style.display = 'none';
+        }
+    }
+
+    document.querySelector('#cafes-table tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-cafe-btn')) {
+            const tr = e.target.closest('tr');
+            const cafeId = tr.getAttribute('data-cafe-id');
+            const cafeName = tr.children[1].textContent;
+
+            if (confirm(`Ви точно хочете видалити кав\`ярню "${cafeName}"?`)) {
+                try {
+                    const res = await fetch(`/admin/cafes/${cafeId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        alert('Помилка при видаленні: ' + errText);
+                        return;
+                    }
+
+                    alert(`Кав\`ярню "${cafeName}" успішно видалено!`);
+                    loadCafes();
+                } catch (e) {
+                    alert('Помилка: ' + e.message);
+                }
+            }
+        }
+    });
+
+    document.getElementById('tab-users').addEventListener('click', () => {
+        showTable('users-table');
+    });
+    document.getElementById('tab-cafes').addEventListener('click', () => {
+        showTable('cafes-table');
+    });
+    document.getElementById('tab-orders').addEventListener('click', () => {
+        showTable('orders-table');
+    });
+
+    function logout() {
+        fetch('/auth/api/auth/logout', {
+            method: 'POST',
+            credentials: 'same-origin'
+        }).then(() => {
+            window.location.href = '/auth/login';
+        });
+    }
+
+    async function loadCurrentUser() {
+        try {
+            const res = await secureFetch('/auth/me');
+            if (!res) return;
+            const user = await res.json();
+
+            document.getElementById('user-name').textContent = user.username || '-';
+            document.getElementById('session-id').textContent = user.sessionId || '-';
+        } catch (e) {
+            console.error("Помилка при завантаженні поточного користувача:", e);
+        }
+    }
+
+    document.querySelector('#users-table tbody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-user-btn')) {
+            const tr = e.target.closest('tr');
+            const userId = tr.getAttribute('data-user-id');
+            const username = tr.children[1].textContent;
+            const roles = tr.children[2].textContent.split(', ').filter(r => r);
+
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-username').value = username;
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-role').value = roles.length > 0 ? roles[0] : '';
+
+            document.getElementById('edit-user-form').style.display = 'block';
+            document.getElementById('create-user-form').style.display = 'none';
+        }
+    });
+
+    document.getElementById('btn-create-user').addEventListener('click', async () => {
+        const res = await secureFetch('/auth/me');
+        if (!res || res.status !== 200) {
+            alert("Будь ласка, увійдіть у систему.");
+            return;
+        }
+
+        const user = await res.json();
+        const roles = user.roles || [];
+
+        if (!roles.includes("ROLE_ADMIN")) {
+            alert("У вас немає прав для створення користувачів.");
+            return;
+        }
+
+        document.getElementById('create-user-form').style.display = 'block';
+    });
+
+
+    document.getElementById('cancel-new-user').addEventListener('click', () => {
+        document.getElementById('create-user-form').style.display = 'none';
+        clearForm();
+    });
+
+    document.getElementById('submit-new-user').addEventListener('click', async () => {
+        const username = document.getElementById('new-username').value.trim();
+        const password = document.getElementById('new-password').value.trim();
+        const role = document.getElementById('new-role').value;
+
+        if (!username || !password || !role) {
+            alert('Будь ласка, заповніть усі поля.');
+            return;
+        }
+
+        const newUser = {
+            username: username,
+            password: password,
+            roles: [role],
+            enabled: true
+        };
+
+        try {
+            const res = await fetch('/admin/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify(newUser)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                alert('Помилка: ' + errText);
+                return;
+            }
+
+            alert('Користувача створено успішно!');
+            document.getElementById('create-user-form').style.display = 'none';
+            clearForm();
+            loadUsers();
+            if (role === 'ROLE_MANAGER') {
+                loadManagersForCafeForm();
+            }
+        } catch (e) {
+            alert('Помилка: ' + e.message);
+        }
+    });
+
+    document.querySelector('#users-table tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-user-btn')) {
+            const tr = e.target.closest('tr');
+            const userId = tr.getAttribute('data-user-id');
+            const username = tr.children[1].textContent;
+
+            if (confirm(`Ви точно хочете видалити користувача "${username}"?`)) {
+                try {
+                    const res = await fetch(`/admin/users/${userId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        alert('Помилка при видаленні: ' + errText);
+                        return;
+                    }
+
+                    alert(`Користувача "${username}" успішно видалено!`);
+                    loadUsers();
+                } catch (e) {
+                    alert('Помилка: ' + e.message);
+                }
+            }
+        }
+    });
+
+    function clearForm() {
+        document.getElementById('new-username').value = '';
+        document.getElementById('new-password').value = '';
+        document.getElementById('new-role').value = '';
+    }
+
+    function showSection(sectionId) {
+        ['users-section', 'cafes-section', 'orders-section', 'menu-section'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+
+        document.getElementById(sectionId).style.display = 'block';
+
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.toggle('active', btn.id === `tab-${sectionId.split('-')[0]}`);
+        });
+
+        const btnCreateUser = document.getElementById('btn-create-user');
+        if (sectionId === 'users-section') {
+            btnCreateUser.style.display = 'inline-block';
+        } else {
+            btnCreateUser.style.display = 'none';
+            document.getElementById('create-user-form').style.display = 'none';
+        }
+    }
+
+    document.getElementById('tab-menu').addEventListener('click', async () => {
+        showSection('menu-section');
+        const menuCafeSelect = document.getElementById('menu-cafe-select');
+        const selectedCafeId = menuCafeSelect.value;
+        if (selectedCafeId) {
+            try {
+                const res = await secureFetch(`/cafes/${selectedCafeId}/menu`);
+                if (!res.ok) throw new Error('Не вдалося завантажити меню');
+                const items = await res.json();
+
+                const tbody = document.querySelector('#menu-items-table tbody');
+                if (!tbody) {
+                    console.error('tbody not found');
+                    return;
+                }
+
+                tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.price} $</td>
+            </tr>
+        `).join('');
+
+                document.getElementById('menu-items-table').style.display = 'table';
+
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+    });
+
+    loadCurrentUser();
+    loadUsers();
+    loadCafes();
+    loadMenuCafes();
+    loadOrders();
+    showTable('users-table');
+</script>
+
+</body>
+</html>

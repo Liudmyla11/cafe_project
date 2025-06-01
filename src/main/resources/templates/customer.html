@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <title>Панель Користувача</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f4f7fa;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #2f80ed;
+        }
+
+        select, table {
+            margin-top: 10px;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e4e8;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #f6f8fa;
+        }
+
+        tbody tr:hover {
+            background-color: #eaf2ff;
+        }
+
+        #user-info {
+            text-align: right;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 16px;
+            background-color: #2f80ed;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a64d6;
+        }
+
+        .menu-item {
+            margin: 5px 0;
+        }
+
+        .menu-item input {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="user-info">
+    Користувач: <span id="user-name">...</span> | Сесія: <span id="session-id">...</span>
+</div>
+
+<h1>Панель користувача</h1>
+
+<label for="cafeSelect">Виберіть кав'ярню, щоб створити замовлення:</label>
+<select id="cafeSelect"></select>
+
+<div id="menuItemsContainer"></div>
+
+<button id="createOrderBtn" onclick="createOrder()" style="display:none;">Створити замовлення</button>
+
+<h2>Ваші замовлення</h2>
+<table id="ordersTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Кав'ярня</th>
+        <th>Позиції</th>
+        <th>Сума</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<button onclick="logout()">Вийти</button>
+
+<script>
+    async function secureFetch(url, options = {}) {
+        const res = await fetch(url, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            ...options
+        });
+        if (res.status === 401) {
+            alert("Сесія завершена. Увійдіть знову.");
+            window.location.href = "/auth/login";
+            return null;
+        }
+        return res;
+    }
+
+    async function loadCurrentUser() {
+        const res = await secureFetch('/auth/me');
+        if (!res) return;
+        const user = await res.json();
+        document.getElementById('user-name').textContent = user.username;
+        document.getElementById('session-id').textContent = user.sessionId || '-';
+    }
+
+    async function loadCafes() {
+        const res = await secureFetch('/customer/cafes');
+        if (!res) return;
+        const cafes = await res.json();
+        const select = document.getElementById('cafeSelect');
+        const createOrderBtn = document.getElementById('createOrderBtn');
+
+        select.innerHTML = `<option value="" disabled selected>-- Оберіть кав’ярню --</option>` +
+            cafes.map(c => `<option value="${c.id}">${c.name} (${c.city})</option>`).join('');
+
+        createOrderBtn.style.display = 'none';
+
+        select.addEventListener("change", () => {
+            if (select.value) {
+                createOrderBtn.style.display = 'inline-block';
+                loadMenu(select.value);
+            } else {
+                createOrderBtn.style.display = 'none';
+            }
+        });
+    }
+
+    async function loadMenu(cafeId) {
+        const res = await secureFetch(`/customer/cafes/${cafeId}/menu`);
+        if (!res) return;
+        const items = await res.json();
+        const container = document.getElementById('menuItemsContainer');
+        container.innerHTML = '<h3>Меню</h3>' + items.map(item => `
+            <div class="menu-item">
+                <label>
+                    <input type="checkbox" value="${item.id}" data-price="${item.price}" />
+                    ${item.name} (${item.price.toFixed(2)} $)
+                </label>
+            </div>
+        `).join('');
+    }
+
+    async function createOrder() {
+        const cafeId = document.getElementById('cafeSelect').value;
+        const checkboxes = Array.from(document.querySelectorAll('#menuItemsContainer input:checked'));
+
+        if (checkboxes.length === 0) {
+            alert("Оберіть хоча б одну позицію з меню.");
+            return;
+        }
+
+        const selected = checkboxes.map(checkbox => ({
+            id: parseInt(checkbox.value)
+        }));
+
+        const totalAmount = checkboxes.reduce((sum, checkbox) => {
+            const price = parseFloat(checkbox.getAttribute('data-price') || '0');
+            return sum + price;
+        }, 0);
+
+        const order = {
+            cafe: { id: parseInt(cafeId) },
+            items: selected,
+            totalAmount: totalAmount
+        };
+
+        const res = await secureFetch('/customer/orders', {
+            method: 'POST',
+            body: JSON.stringify(order)
+        });
+
+        if (res && res.ok) {
+            alert("Замовлення створено успішно! Сума: " + totalAmount.toFixed(2) + " $");
+            await loadOrders();
+        } else {
+            const text = await res.text();
+            alert("Помилка при створенні замовлення: " + text);
+        }
+    }
+
+    async function loadOrders() {
+        const res = await secureFetch('/customer/orders');
+        if (!res) return;
+        const orders = await res.json();
+        const tbody = document.querySelector('#ordersTable tbody');
+        tbody.innerHTML = orders.map(order => `
+        <tr>
+            <td>${order.id}</td>
+            <td>${order.cafeName || '-'}</td>
+            <td>${Array.isArray(order.itemNames) ? order.itemNames.join(', ') : '-'}</td>
+            <td>${order.totalAmount?.toFixed(2) || '—'} $</td>
+        </tr>
+    `).join('');
+    }
+
+    function logout() {
+        fetch('/auth/api/auth/logout', { method: 'POST', credentials: 'include' })
+            .then(() => window.location.href = '/auth/login');
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+        await loadCurrentUser();
+        await loadCafes();
+        await loadOrders();
+    });
+</script>
+
+</body>
+</html>

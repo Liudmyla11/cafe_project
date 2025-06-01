@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <title>Панель Менеджера</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f4f7fa;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #2f80ed;
+        }
+
+        select, table {
+            margin-top: 10px;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e4e8;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #f6f8fa;
+        }
+
+        tbody tr:hover {
+            background-color: #eaf2ff;
+        }
+
+        .info-box {
+            background-color: #fff;
+            border-left: 4px solid #2f80ed;
+            padding: 10px 15px;
+            margin-top: 20px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+
+        #user-info {
+            text-align: right;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: var(--gray);
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 16px;
+            background-color: #2f80ed;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a64d6;
+        }
+    </style>
+</head>
+<body>
+
+<div id="user-info">
+    Менеджер: <span id="user-name">...</span> | Сесія: <span id="session-id">...</span>
+</div>
+
+<h1>Панель менеджера</h1>
+
+<label for="cafe-select">Оберіть кавʼярню:</label>
+<select id="cafe-select">
+    <option value="" disabled selected>-- Оберіть кавʼярню --</option>
+</select>
+
+<div class="info-box" id="cafe-details" style="display:none;">
+    <p><strong>Назва:</strong> <span id="cafe-name"></span></p>
+    <p><strong>Адреса:</strong> <span id="cafe-address"></span></p>
+    <p><strong>Місто:</strong> <span id="cafe-city"></span></p>
+</div>
+
+<h2>Меню кавʼярні</h2>
+<button id="btn-create-menu-item" style="margin-bottom: 10px; display: none;">Створити позицію меню</button>
+
+<div id="create-menu-item-form" style="display:none; margin-top: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 6px; max-width: 400px;">
+    <h3>Створити позицію меню</h3>
+    <label>
+        Назва:
+        <input type="text" id="new-menu-item-name" required>
+    </label><br><br>
+    <label>
+        Категорія:
+        <input type="text" id="new-menu-item-category" required>
+    </label><br><br>
+    <label>
+        Ціна:
+        <input type="number" id="new-menu-item-price" min="0" step="0.01" required>
+    </label><br><br>
+    <button id="submit-new-menu-item">Створити</button>
+    <button id="cancel-new-menu-item">Відмінити</button>
+</div>
+
+<table id="menu-table">
+    <thead>
+    <tr>
+        <th>Назва</th>
+        <th>Категорія</th>
+        <th>Ціна</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<h2>Замовлення кав'ярні</h2>
+<table id="orders-table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Клієнт</th>
+        <th>Продукти</th>
+        <th>Сума</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<button onclick="logout()">Вийти</button>
+
+<script>
+    const cafeSelect = document.getElementById("cafe-select");
+    const cafeDetails = document.getElementById("cafe-details");
+    const cafeName = document.getElementById("cafe-name");
+    const cafeAddress = document.getElementById("cafe-address");
+    const cafeCity = document.getElementById("cafe-city");
+    const createMenuButton = document.getElementById('btn-create-menu-item');
+    const menuTableBody = document.querySelector("#menu-table tbody");
+
+    async function loadCurrentUser() {
+        try {
+            const res = await secureFetch('/auth/me');
+            if (!res) return;
+            const user = await res.json();
+            document.getElementById('user-name').textContent = user.username || '-';
+            document.getElementById('session-id').textContent = user.sessionId || '-';
+        } catch (e) {
+            console.error("Помилка при завантаженні поточного користувача:", e);
+        }
+    }
+
+    function logout() {
+        fetch('/auth/api/auth/logout', { method: 'POST', credentials: 'include' })
+            .then(() => window.location.href = '/auth/login');
+    }
+
+    async function secureFetch(url) {
+        const res = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (res.status === 401) {
+            alert("Сесія завершена. Увійдіть знову.");
+            window.location.href = "/auth/login";
+            return null;
+        }
+        if (!res.ok) {
+            const text = await res.text();
+            alert(`Помилка: ${res.status} - ${text}`);
+            return null;
+        }
+        return res;
+    }
+
+    async function loadCafes() {
+        const res = await secureFetch("/manager/cafes");
+        if (!res) return;
+        const cafesList = await res.json();
+        cafes = cafesList;
+        cafesList.forEach(cafe => {
+            const option = document.createElement("option");
+            option.value = cafe.id;
+            option.textContent = `${cafe.name} (${cafe.city})`;
+            cafeSelect.appendChild(option);
+        });
+    }
+
+    async function loadMenu(cafeId) {
+        const res = await secureFetch(`/manager/cafes/${cafeId}/menu`);
+        if (!res) return;
+        const menuItems = await res.json();
+        menuTableBody.innerHTML = "";
+        menuItems.forEach(item => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.price} $</td>
+            `;
+            menuTableBody.appendChild(row);
+        });
+    }
+
+    async function loadOrders(cafeId) {
+        if (!cafeId) {
+            document.querySelector('#orders-table tbody').innerHTML = '';
+            return;
+        }
+
+        try {
+            const res = await secureFetch(`/manager/orders?cafeId=${cafeId}`);
+            if (!res) return;
+            const orders = await res.json();
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = orders.map(o => {
+                const clientName = o.user ? o.user.username : '-';
+                let itemNames = '-';
+                if (Array.isArray(o.items) && o.items.length > 0) {
+                    if (typeof o.items[0] === 'object' && o.items[0] !== null && 'name' in o.items[0]) {
+                        itemNames = o.items.map(i => i.name).join(', ');
+                    } else {
+                        itemNames = o.items.join(', ');
+                    }
+                }
+                const totalAmount = o.totalAmount !== undefined ? o.totalAmount.toFixed(2) : '-';
+                return `
+                    <tr>
+                        <td>${o.id}</td>
+                        <td>${clientName}</td>
+                        <td>${itemNames}</td>
+                        <td>${totalAmount} $</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    function showCafeDetails(cafe) {
+        cafeName.textContent = cafe.name;
+        cafeAddress.textContent = cafe.address;
+        cafeCity.textContent = cafe.city;
+        cafeDetails.style.display = "block";
+    }
+
+    cafeSelect.addEventListener("change", async () => {
+        const cafeId = cafeSelect.value;
+        if (!cafeId) {
+            cafeDetails.style.display = "none";
+            menuTableBody.innerHTML = "";
+            document.querySelector('#orders-table tbody').innerHTML = '';
+            createMenuButton.style.display = 'none';
+            return;
+        }
+
+        const selectedCafe = cafes.find(c => c.id == cafeId);
+        if (selectedCafe) showCafeDetails(selectedCafe);
+
+        await loadMenu(cafeId);
+        await loadOrders(cafeId);
+        createMenuButton.style.display = 'inline-block';
+    });
+
+    document.getElementById('btn-create-menu-item').addEventListener('click', () => {
+        document.getElementById('create-menu-item-form').style.display = 'block';
+    });
+
+    document.getElementById('cancel-new-menu-item').addEventListener('click', () => {
+        document.getElementById('create-menu-item-form').style.display = 'none';
+    });
+
+    document.getElementById('submit-new-menu-item').addEventListener('click', async () => {
+        const name = document.getElementById('new-menu-item-name').value.trim();
+        const category = document.getElementById('new-menu-item-category').value.trim();
+        const price = parseFloat(document.getElementById('new-menu-item-price').value);
+        const cafeId = cafeSelect.value;
+
+        if (!name || !category || isNaN(price) || price <= 0) {
+            alert('Будь ласка, заповніть усі поля та переконайтеся, що ціна правильна.');
+            return;
+        }
+
+        const newMenuItem = {
+            name,
+            category,
+            price,
+            cafe: { id: parseInt(cafeId) }
+        };
+
+        try {
+            const res = await fetch('/manager/menu-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(newMenuItem)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                alert('Помилка: ' + errText);
+                return;
+            }
+
+            alert('Позицію меню створено успішно!');
+            document.getElementById('create-menu-item-form').style.display = 'none';
+            document.getElementById('new-menu-item-name').value = '';
+            document.getElementById('new-menu-item-category').value = '';
+            document.getElementById('new-menu-item-price').value = '';
+            await loadMenu(cafeId);
+        } catch (e) {
+            alert('Помилка: ' + e.message);
+        }
+    });
+
+    let cafes = [];
+
+    window.addEventListener("DOMContentLoaded", async () => {
+        await loadCafes();
+        await loadCurrentUser();
+        createMenuButton.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>

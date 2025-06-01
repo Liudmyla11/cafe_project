@@ -1,0 +1,25 @@
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://dpg-d0qnk1buibrs73ep0glg-a/cafe_db_5xwa
+    username: user
+    password: 3KbP3mYUEkKo7HHGY1OTtJpK8Nd5eRZa
+    driverClassName: org.postgresql.Driver
+  sql:
+    init:
+      platform: postgres
+  elasticsearch:
+    uris: http://localhost:9200
+    username: Liudmyla
+    password: fdjjf23Gk
+
+jwt:
+  secret: fgFHsi12jjf426hncxdkRt11FweeGFtcGxlLXN1cGVyLXNlY3JldC1mb3ItSFM1MTItYW5kLWl0cy02NC1ieXRlcw110456
+  expiration: 3600000
