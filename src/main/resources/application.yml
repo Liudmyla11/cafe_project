@@ -8,9 +8,9 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    url: jdbc:postgresql://dpg-d0qnk1buibrs73ep0glg-a/cafe_db_5xwa
+    url: jdbc:postgresql://dpg-d0ue1fs9c44c73apd320-a/cafe_db_6es9
     username: user
-    password: 3KbP3mYUEkKo7HHGY1OTtJpK8Nd5eRZa
+    password: t6dfuBc0UV4JogJ4vdhWjBLuXKaYmhGq
     driverClassName: org.postgresql.Driver
   sql:
     init:
